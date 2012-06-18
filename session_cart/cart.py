@@ -2,6 +2,7 @@
 Session based shopping cart
 """
 from django.core.exceptions import ImproperlyConfigured
+from django.conf import settings
 from .utils import import_cart
 
 class CartItem(object):
@@ -34,14 +35,18 @@ class Cart(list):
         self.name = name
         if self.model is None:
             from django.db import models
-            from django.conf import settings
             try:
                 Cart.model = import_cart(settings.CART_MODEL)
             except AttributeError:
                 raise ImproperlyConfigured("%s isn't a valid Cart model." % settings.CART_MODEL)
+        if settings.CART_MODEL_DB:
+            self.database = settings.CART_MODEL_DB
+        
         # Cart is stored as a list of ( item_id, quantity )
         for item, quantity in request.session.get(self.name, []):
             try:
+                item = self._get(item)
+                item.session_cart_quantity = quantity
                 self.append(item, quantity)
             except self.model.DoesNotExist:
                 pass
@@ -60,7 +65,10 @@ class Cart(list):
         Ensure item is an instance of self.model
         """
         if not isinstance(item, self.model):
-            return self.model._default_manager.get(pk=item)
+            if self.database:
+                return self.model._default_manager.using(self.database).get(pk=item)
+            else:
+                return self.model._default_manager.get(pk=item)
         return item
 
     def index(self, value, **kwargs):
@@ -137,3 +145,19 @@ class Cart(list):
     @property
     def total_quantity(self):
         return reduce(lambda res, x: res+x, [i.quantity for i in self])
+        
+    @property
+    def items(self):
+        items = []
+        for item in self:
+            items.append(item.item)
+        return items
+
+    @property
+    def total_price(self):
+        if hasattr(self.model, 'price'):
+            total_price = 0
+            for item in self:
+                print item
+                total_price += item.item.price * item.quantity
+            return total_price
