@@ -29,16 +29,18 @@ class Cart(list):
     """
     model = None
 
-    def __init__(self, request, name='cart'):
+    def __init__(self, request, name='cart', products=False):
         super(Cart, self).__init__()
         self.request = request
         self.name = name
+        self.products = products
         if self.model is None:
             from django.db import models
             try:
                 Cart.model = import_cart(settings.CART_MODEL)
             except AttributeError:
                 raise ImproperlyConfigured("%s isn't a valid Cart model." % settings.CART_MODEL)
+        self.database = 'default'
         if settings.CART_MODEL_DB:
             self.database = settings.CART_MODEL_DB
         
@@ -63,12 +65,14 @@ class Cart(list):
     def _get(self, item):
         """
         Ensure item is an instance of self.model
+        Doesn't have to be a django model. Has to have a get attribute and DoesNotExist property
         """
         if not isinstance(item, self.model):
-            if self.database:
+            try:
                 return self.model._default_manager.using(self.database).get(pk=item)
-            else:
-                return self.model._default_manager.get(pk=item)
+            except:
+                inst = self.model(self.products)
+                return inst.get(pk=item)
         return item
 
     def index(self, value, **kwargs):
