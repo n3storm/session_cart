@@ -83,6 +83,8 @@ class Cart(list):
             for i in self:
                 if i.item == value:
                     return self.index(i)
+                elif i.item.id == value.id:
+                    return self.index(i)
         return super(Cart, self).index(value, **kwargs)
 
     def append(self, item, quantity=1):
@@ -159,9 +161,13 @@ class Cart(list):
 
     @property
     def total_price(self):
+        total_price = 0
+        for item in self:
+            total_price += item.item.price * item.quantity
         if hasattr(self.model, 'price'):
-            total_price = 0
-            for item in self:
-                print item
-                total_price += item.item.price * item.quantity
-            return total_price
+            for item in self.items:
+                try:
+                    total_price += item.price * item.quantity
+                except:
+                    pass
+        return total_price
