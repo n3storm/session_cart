@@ -43,13 +43,17 @@ class Cart(list):
         self.database = 'default'
         if settings.CART_MODEL_DB:
             self.database = settings.CART_MODEL_DB
-        
+        print "vete a la mierda"
         # Cart is stored as a list of ( item_id, quantity )
         for item, quantity in request.session.get(self.name, []):
+            item = self._get(item)
+            print item
             try:
+                
                 item = self._get(item)
-                item.session_cart_quantity = quantity
-                self.append(item, quantity)
+                if item is not None:
+                    item.session_cart_quantity = quantity
+                    self.append(item, quantity)
             except self.model.DoesNotExist:
                 pass
 
@@ -65,7 +69,7 @@ class Cart(list):
     def _get(self, item):
         """
         Ensure item is an instance of self.model
-        Doesn't have to be a django model. Has to have a get attribute and DoesNotExist property
+        Doesn't have to be a django model. Has to have a get property
         """
         if not isinstance(item, self.model):
             try:
@@ -82,8 +86,6 @@ class Cart(list):
         if isinstance(value, self.model):
             for i in self:
                 if i.item == value:
-                    return self.index(i)
-                elif i.item.id == value.id:
                     return self.index(i)
         return super(Cart, self).index(value, **kwargs)
 
@@ -161,13 +163,9 @@ class Cart(list):
 
     @property
     def total_price(self):
-        total_price = 0
-        for item in self:
-            total_price += item.item.price * item.quantity
         if hasattr(self.model, 'price'):
-            for item in self.items:
-                try:
-                    total_price += item.price * item.quantity
-                except:
-                    pass
-        return total_price
+            total_price = 0
+            for item in self:
+                print item
+                total_price += item.item.price * item.quantity
+            return total_price
