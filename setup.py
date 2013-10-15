@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup( name='session-cart',
-    version='1.3.0',
+    version='1.3.1',
     description='A session-stored cart for Django and Generic Classes',
     author='Curtis Maloney, Grigoriy Bezyuk, Nestor Diaz',
     author_email='curtis@tinbrain.net, gbezyuk@gmail.com, nestor@coobleiben.coop',

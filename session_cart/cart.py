@@ -41,7 +41,7 @@ class Cart(list):
             except AttributeError:
                 raise ImproperlyConfigured("%s isn't a valid Cart model." % settings.CART_MODEL)
         self.database = 'default'
-        if settings.CART_MODEL_DB:
+        if hasattr(settings, 'CART_MODEL_DB') and settings.CART_MODEL_DB:
             self.database = settings.CART_MODEL_DB
         print "vete a la mierda"
         # Cart is stored as a list of ( item_id, quantity )
