@@ -43,17 +43,15 @@ class Cart(list):
         self.database = 'default'
         if hasattr(settings, 'CART_MODEL_DB') and settings.CART_MODEL_DB:
             self.database = settings.CART_MODEL_DB
-        print "vete a la mierda"
         # Cart is stored as a list of ( item_id, quantity )
         for item, quantity in request.session.get(self.name, []):
+            #~ print item
             item = self._get(item)
-            print item
+            #~ print item
             try:
-                
                 item = self._get(item)
-                if item is not None:
-                    item.session_cart_quantity = quantity
-                    self.append(item, quantity)
+                item.session_cart_quantity = quantity
+                self.append(item, quantity)
             except self.model.DoesNotExist:
                 pass
 
@@ -73,10 +71,11 @@ class Cart(list):
         """
         if not isinstance(item, self.model):
             try:
-                return self.model._default_manager.using(self.database).get(pk=item)
+                item = self.model._default_manager.using(self.database).get(pk=item)
             except:
                 inst = self.model(self.products)
-                return inst.get(pk=item)
+                item = inst.get(pk=item)
+        #~ print item
         return item
 
     def index(self, value, **kwargs):
@@ -153,7 +152,7 @@ class Cart(list):
     @property
     def total_quantity(self):
         return reduce(lambda res, x: res+x, [i.quantity for i in self])
-        
+
     @property
     def items(self):
         items = []
@@ -164,8 +163,7 @@ class Cart(list):
     @property
     def total_price(self):
         if hasattr(self.model, 'price'):
-            total_price = 0
+            total = 0
             for item in self:
-                print item
-                total_price += item.item.price * item.quantity
-            return total_price
+                total += item.item.price * item.quantity
+            return total
